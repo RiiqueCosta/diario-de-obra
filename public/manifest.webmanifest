@@ -1,0 +1,10 @@
+{
+  "name": "Diário de Obra",
+  "short_name": "Diário de Obra",
+  "lang": "pt-BR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#E6E9E8",
+  "theme_color": "#1F2A2E",
+  "icons": [{ "src": "/icone.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

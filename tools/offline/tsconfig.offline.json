@@ -1,0 +1,40 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "@/*": [
+        "../../src/*"
+      ],
+      "@supabase/supabase-js": [
+        "../../../vendor-src/supabase-js/packages/core/supabase-js/src/index.ts"
+      ],
+      "@supabase/auth-js": [
+        "../../../vendor-src/supabase-js/packages/core/auth-js/src/index.ts"
+      ],
+      "@supabase/postgrest-js": [
+        "../../../vendor-src/supabase-js/packages/core/postgrest-js/src/index.ts"
+      ],
+      "@supabase/storage-js": [
+        "../../../vendor-src/supabase-js/packages/core/storage-js/src/index.ts"
+      ],
+      "@supabase/functions-js": [
+        "../../../vendor-src/supabase-js/packages/core/functions-js/src/index.ts"
+      ],
+      "@supabase/realtime-js": [
+        "../../../vendor-src/supabase-js/packages/core/realtime-js/src/index.ts"
+      ],
+      "@supabase/phoenix": [
+        "../../../vendor-src/phoenix/priv/static/types/index.d.ts"
+      ],
+      "iceberg-js": [
+        "../../../vendor-src/iceberg-js/src/index.ts"
+      ],
+      "@supabase/tracing": [
+        "../../../vendor-src/supabase-js/packages/shared/tracing/src/index.ts"
+      ]
+    }
+  },
+  "include": [
+    "../../src"
+  ]
+}
