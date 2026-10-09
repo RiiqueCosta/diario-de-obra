@@ -7,3 +7,6 @@ dist-offline/
 *.log
 .DS_Store
 .vercel
+
+# backups locais (contêm dados reais)
+backups/

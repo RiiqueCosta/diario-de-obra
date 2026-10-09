@@ -409,3 +409,6 @@ begin
 end $test$;
 revoke all on all functions in schema tests from public, anon, authenticated;
 
+
+alter function tests.install_helpers() set search_path = public, pg_temp;
+alter function tests.run_autorizacao() set search_path = public, pg_temp;

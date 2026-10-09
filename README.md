@@ -4,18 +4,36 @@ Sistema web para empresas de construção registrarem o dia a dia de várias obr
 
 - **Front-end:** React 19 + TypeScript + Vite (sem biblioteca de UI externa; roteador e componentes próprios).
 - **Back-end:** Supabase — Postgres com RLS, Auth, Storage privado e Edge Functions.
-- **Hospedagem prevista:** Vercel (site estático).
+- **Hospedagem:** Vercel (site estático), publicado a cada envio para a branch `main`.
 
 ## Situação por fase
 
 | Fase | Conteúdo | Situação |
 |---|---|---|
-| 1 — Fundação | banco, RLS, auditoria, autenticação, empresas, usuários e convites, permissões por obra, cadastro de obras, painel | **concluída** (testes de autorização 92/92) |
-| 2 — Diário de Obra | diário completo por seções, clima, serviços, equipe, materiais, equipamentos, calendário | tabelas e regras prontas no banco; telas a fazer |
-| 3 — Fotos e documentos | upload/câmera, galeria, miniaturas | Storage e políticas prontos; telas a fazer |
-| 4 — Gestão de campo | atividades, cronograma, ocorrências | tabelas e regras prontas; telas a fazer |
-| 5 — Relatórios e aprovações | PDFs, fluxo de aprovação | fluxo de aprovação pronto e testado no banco; PDFs e telas a fazer |
-| 6 — Finalização | notificações agendadas, backup, desempenho, manual | a fazer |
+| 1 — Fundação | banco, RLS, auditoria, autenticação, empresas, usuários e convites, permissões por obra, cadastro de obras, painel | concluída |
+| 2 — Diário de Obra | diário em 8 seções (identificação, clima, serviços, mão de obra, materiais e equipamentos, ocorrências, fotos, encerramento), cópia local de segurança, controle de edição simultânea, calendário por obra | concluída |
+| 3 — Fotos e documentos | câmera e galeria do celular, data original da foto (EXIF), miniaturas, fila com reenvio, galeria por dia, comparação, documentos da obra | concluída |
+| 4 — Gestão de campo | etapas e atividades com peso, dependências, cronograma (Gantt), ocorrências com comentários e histórico, equipe, materiais e equipamentos | concluída |
+| 5 — Relatórios e aprovações | envio, aprovação, devolução e reabertura com versões; 9 relatórios em PDF | concluída |
+| 6 — Finalização | alertas automáticos diários, limpeza de notificações, backup e restauração | concluída |
+
+Testes no banco: autorização e integridade **92/92**, alertas automáticos **10/10**. As telas foram verificadas por capturas automatizadas (computador e celular) com dados simulados; a validação com dados reais é feita no site publicado.
+
+## Alertas automáticos
+
+Todos os dias às 07:05 (Brasília) o banco gera notificações (pg_cron → `private.run_daily_alerts()`):
+
+- atividade atrasada → responsável e quem gerencia atividades;
+- prazo de atividade ou ocorrência vencendo em até *N* dias (Configurações da empresa) → responsável;
+- ocorrência vencida → responsável e quem gerencia ocorrências;
+- ocorrência sem responsável há mais de 1 dia → quem gerencia ocorrências;
+- obra em andamento sem diário há *N* dias úteis → gestores e quem preenche diários.
+
+Cada aviso é enviado uma única vez por pessoa (não se repete todo dia). Aos domingos, notificações lidas há mais de 180 dias são apagadas.
+
+## Backup
+
+Veja [docs/BACKUP.md](docs/BACKUP.md). Resumo: o backup automático do Supabase (planos pagos) cobre o banco, mas **não** as fotos; use `tools/backup/` para uma cópia externa completa.
 
 ## Rodar no computador
 
@@ -50,7 +68,8 @@ O servidor de e-mail padrão do Supabase envia poucas mensagens por hora e só p
 `supabase/tests/autorizacao.sql` instala o esquema `tests` (sem acesso pela API). Para rodar no SQL Editor:
 
 ```sql
-select tests.run_autorizacao();
+select tests.install_helpers(); select tests.run_autorizacao();
+select tests.install_helpers(); select tests.run_alertas();      -- supabase/tests/alertas.sql
 ```
 
 A execução termina com a mensagem `RESULTADO: X ok, Y falhas` e a lista de verificações. Tudo roda numa transação desfeita no final: nenhum dado de teste fica no banco.

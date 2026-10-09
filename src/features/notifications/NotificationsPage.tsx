@@ -11,7 +11,7 @@ import { Icon, type IconName } from '@/ui/Icon'
 const ICON: Record<string, IconName> = {
   diario_pendente: 'aprovar', diario_aprovado: 'ok', diario_devolvido: 'alerta', diario_reaberto: 'editar',
   ocorrencia_prioritaria: 'alerta', ocorrencia_atribuida: 'usuario', atividade_atrasada: 'calendario', prazo_proximo: 'calendario',
-  obra_sem_registro: 'diario', ocorrencia_sem_responsavel: 'usuario',
+  obra_sem_registro: 'diario', obra_sem_diario: 'diario', ocorrencia_sem_responsavel: 'usuario', ocorrencia_vencida: 'alerta',
 }
 
 export function NotificationsPage() {
