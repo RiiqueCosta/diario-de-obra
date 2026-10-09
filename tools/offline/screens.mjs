@@ -44,7 +44,7 @@ function api(url, method) {
   const p = u.pathname
   if (p.endsWith('/rpc/accept_pending_invites')) return [200, 0]
   if (p.endsWith('/rpc/dashboard_summary')) return [200, { total_obras: 3, obras_em_andamento: 1, obras_concluidas: 0, obras_paralisadas: 1, obras_com_atraso: 1, diarios_hoje: 0, diarios_no_periodo: 0, diarios_pendentes: 0, diarios_devolvidos: 0, ocorrencias_abertas: 0, ocorrencias_sem_responsavel: 0, atividades_atrasadas: 2, atividades_bloqueadas: 0, pendencias_vencendo: 1, gerado_em: now }]
-  if (p.endsWith('/rpc/my_project_permissions')) return [200, { 'obra.editar': true, is_admin: isAdmin, role: null }]
+  if (p.endsWith('/rpc/my_project_permissions')) return [200, Object.fromEntries(['obra.editar','diario.criar','diario.corrigir','diario.ver_todos','diario.aprovar','foto.enviar','ocorrencia.criar','ocorrencia.gerenciar','atividade.gerenciar','equipe.gerenciar','relatorio.gerar','documento.enviar'].map((k) => [k, isAdmin]).concat([['is_admin', isAdmin], ['role', null]]))]
   if (p.endsWith('/profiles')) {
     if (u.searchParams.get('id')?.startsWith('in.')) return [200, [{ id: UID, name: 'Luiz Costa (demo)', email: 'demo@exemplo.invalid' }]]
     return [200, { id: UID, name: 'Luiz Costa (demo)', email: 'demo@exemplo.invalid', status: 'ativo', must_change_password: false, created_at: now, updated_at: now }]
@@ -72,7 +72,62 @@ function api(url, method) {
     { id: 'a1', organization_id: ORG, user_id: UID, project_id: P1, entity_type: 'projects', entity_id: P1, action: 'update', previous_values: { name: 'Residencial Jardim', status: 'planejamento' }, new_values: { name: 'Residencial Jardim das Águas — Bloco B', status: 'em_andamento' }, created_at: now },
     { id: 'a2', organization_id: ORG, user_id: UID, project_id: P1, entity_type: 'project_members', entity_id: 'pm1', action: 'insert', previous_values: null, new_values: { role: 'encarregado' }, created_at: now },
   ], { 'content-range': '0-1/2' }]
+
+  const prj = { id: P1, name: PROJECTS[0].name, code: PROJECTS[0].code, organization_id: ORG }
+  const me = { id: UID, name: 'Luiz Costa (demo)', email: 'demo@exemplo.invalid' }
+  const d = (n) => { const x = new Date(); x.setDate(x.getDate() - n); return x.toISOString().slice(0, 10) }
+  const report = (i, status) => ({
+    id: `44444444-4444-4444-8444-44444444444${i}`, project_id: P1, report_date: d(i), kind: 'principal', status, author_user_id: UID,
+    weather: 'ensolarado', work_conditions: 'praticavel', start_time: '07:00', end_time: '17:00', interval_minutes: 60, temperature_c: 27, weather_afternoon: null, weather_impact: null, general_summary: 'Concretagem da laje L3 concluída sem intercorrências.',
+    weather_notes: null, delays: null, stoppages: null, problems: null, decisions: 'Liberada concretagem da laje do 3º pavimento.', technical_visits: null,
+    next_day_plan: 'Desforma dos pilares P12 a P18.', pending_items: null, technical_notes: null, final_notes: null, general_notes: null,
+    version: 1, row_version: 1, submitted_at: null, approved_at: null, created_at: now, updated_at: now, created_by: UID, project: prj, author: me,
+  })
+  const REPORTS = [report(0, 'rascunho'), report(1, 'enviado'), report(2, 'aprovado'), report(3, 'devolvido'), report(5, 'aprovado')]
+  if (p.endsWith('/daily_reports')) {
+    const id = u.searchParams.get('id')
+    if (id) {
+      const r = REPORTS.find((x) => `eq.${x.id}` === id) ?? REPORTS[0]
+      return [200, { ...r,
+        activities: [{ id: 'ra1', daily_report_id: r.id, activity_id: null, activity: null, description: 'Armação e concretagem da laje L3', location: 'Bloco B — 3º pav.', quantity: 42.5, unit: 'm³', execution_status: 'concluida', progress_percentage: 100, sort_order: 0, notes: null, created_at: now, created_by: UID }],
+        workers: [{ id: 'rw1', daily_report_id: r.id, worker_id: 'w1', attendance_status: 'presente', hours_worked: 8, observations: null, job_title: 'Pedreiro', company_name: null, activity_id: null, created_at: now, worker: { id: 'w1', name: 'José Pedreiro (demo)', job_title: 'Pedreiro', company_name: null } }],
+        crews: [{ id: 'rc1', daily_report_id: r.id, job_title: 'Armador', company_name: 'Empreiteira Demo', quantity: 6, absent_quantity: 0, observations: null, activity_id: null, created_at: now }],
+        materials: [], equipment: [], occurrences: [],
+        approvals: status_approvals(r), versions: [] }]
+    }
+    if (u.searchParams.get('select')?.startsWith('id, report_date')) return [200, REPORTS.map(({ id, report_date, kind, status, author_user_id }) => ({ id, report_date, kind, status, author_user_id }))]
+    return [200, REPORTS, { 'content-range': `0-4/5` }]
+  }
+  if (p.endsWith('/occurrences')) {
+    const occ = (i, title, priority, status) => ({ id: `55555555-5555-4555-8555-55555555555${i}`, organization_id: ORG, project_id: P1, code: `OC-2026-00${i}`, title, description: 'Registro fictício para revisão visual.', category: 'Qualidade', priority, status, responsible_user_id: UID, due_date: d(-3), occurred_at: now, location: 'Bloco B', daily_report_id: null, activity_id: null, resolution: null, resolved_at: null, row_version: 1, created_by: UID, created_at: now, updated_at: now, project: prj, responsible: me, author: me, activity: null, report: null })
+    const list = [occ(1, 'Fissura na alvenaria do 2º pavimento', 'alta', 'aberta'), occ(2, 'Atraso na entrega de aço CA-50', 'critica', 'em_andamento'), occ(3, 'Vazamento na rede provisória', 'media', 'resolvida')]
+    const id = u.searchParams.get('id')
+    if (id) return [200, list.find((x) => `eq.${x.id}` === id) ?? list[0]]
+    return [200, list, { 'content-range': '0-2/3' }]
+  }
+  if (p.endsWith('/project_stages')) return [200, [
+    { id: 's1', project_id: P1, name: 'Fundação', sequence: 1, weight: 20, planned_start_date: '2026-03-02', planned_end_date: '2026-05-15', description: null, archived_at: null, created_at: now, updated_at: now, created_by: UID },
+    { id: 's2', project_id: P1, name: 'Estrutura', sequence: 2, weight: 40, planned_start_date: '2026-05-10', planned_end_date: '2026-11-30', description: null, archived_at: null, created_at: now, updated_at: now, created_by: UID },
+  ]]
+  if (p.endsWith('/activities')) {
+    const act = (id, stage, title, s, e, pct, status) => ({ id, project_id: P1, stage_id: stage, title, description: null, location: null, responsible_user_id: UID, planned_start_date: s, planned_end_date: e, actual_start_date: s, actual_end_date: pct === 100 ? e : null, progress_percentage: pct, weight: 1, planned_quantity: null, unit: null, priority: 'media', status, notes: null, row_version: 1, created_by: UID, created_at: now, updated_at: now, responsible: me, deps: [] })
+    return [200, [
+      act('a1', 's1', 'Estacas e blocos', '2026-03-02', '2026-04-20', 100, 'concluida'),
+      act('a2', 's1', 'Vigas baldrame', '2026-04-10', '2026-05-15', 100, 'concluida'),
+      act('a3', 's2', 'Pilares e lajes — 1º ao 3º pav.', '2026-05-10', '2026-09-30', 70, 'em_andamento'),
+      act('a4', 's2', 'Pilares e lajes — 4º ao 6º pav.', '2026-09-01', '2026-11-30', 5, 'em_andamento'),
+    ]]
+  }
+  if (p.endsWith('/workers')) return [200, [
+    { id: 'w1', organization_id: ORG, name: 'José Pedreiro (demo)', job_title: 'Pedreiro', company_name: null, contact_information: null, status: 'ativo', created_at: now, updated_at: now, created_by: UID, projects: [{ project_id: P1 }] },
+    { id: 'w2', organization_id: ORG, name: 'Carlos Armador (demo)', job_title: 'Armador', company_name: 'Empreiteira Demo', contact_information: null, status: 'ativo', created_at: now, updated_at: now, created_by: UID, projects: [{ project_id: P1 }] },
+  ]]
   return [200, []]
+}
+function status_approvals(r) {
+  if (r.status === 'rascunho') return []
+  const rv = { id: 'u3', name: 'Ana Engenheira (demo)', email: 'ana@exemplo.invalid' }
+  return [{ id: 'ap1', daily_report_id: r.id, reviewer_user_id: UID, decision: 'enviado', version: 1, comments: null, decided_at: new Date().toISOString(), reviewer: rv }]
 }
 
 const browser = await chromium.launch()

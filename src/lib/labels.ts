@@ -69,3 +69,57 @@ export const FIELD_LABEL: Record<string, string> = {
   weather: 'Clima', general_summary: 'Resumo do dia', returned_reason: 'Motivo da devolução', version: 'Versão',
   title: 'Título', priority: 'Prioridade', responsible_user_id: 'Responsável', due_date: 'Prazo',
 }
+
+// ---------------------------------------------------------------- diário
+export const REPORT_STATUS: Record<Enums<'report_status'>, { label: string; tone: Tone }> = {
+  rascunho: { label: 'Rascunho', tone: 'grey' },
+  enviado: { label: 'Aguardando aprovação', tone: 'yellow' },
+  aprovado: { label: 'Aprovado', tone: 'green' },
+  devolvido: { label: 'Devolvido para correção', tone: 'red' },
+}
+
+export const WEATHER: Record<Enums<'weather_condition'>, string> = {
+  ensolarado: 'Ensolarado', nublado: 'Nublado', chuvoso: 'Chuvoso', chuva_intensa: 'Chuva intensa', outros: 'Outros',
+}
+
+export const WORK_CONDITION: Record<Enums<'work_condition'>, { label: string; description: string }> = {
+  praticavel: { label: 'Praticável', description: 'Trabalho normal durante o dia.' },
+  parcialmente_praticavel: { label: 'Parcialmente praticável', description: 'Parte do dia perdida ou serviços limitados.' },
+  impraticavel: { label: 'Impraticável', description: 'Sem condições de trabalho.' },
+}
+
+export const EXECUTION_STATUS: Record<Enums<'execution_status'>, { label: string; tone: Tone }> = {
+  concluida: { label: 'Concluída', tone: 'green' },
+  em_andamento: { label: 'Em andamento', tone: 'blue' },
+  nao_executada: { label: 'Não executada', tone: 'grey' },
+}
+
+export const ATTENDANCE: Record<Enums<'attendance_status'>, { label: string; tone: Tone }> = {
+  presente: { label: 'Presente', tone: 'green' },
+  falta: { label: 'Falta', tone: 'red' },
+  falta_justificada: { label: 'Falta justificada', tone: 'yellow' },
+  atestado: { label: 'Atestado', tone: 'yellow' },
+  folga: { label: 'Folga', tone: 'grey' },
+}
+
+export const APPROVAL_DECISION: Record<Enums<'approval_decision'>, string> = {
+  enviado: 'Enviado para aprovação', aprovado: 'Aprovado', devolvido: 'Devolvido para correção', reaberto_para_correcao: 'Reaberto para correção',
+}
+
+// ---------------------------------------------------------------- atividades e ocorrências
+export const PRIORITY: Record<Enums<'priority_level'>, { label: string; tone: Tone }> = {
+  baixa: { label: 'Baixa', tone: 'grey' }, media: { label: 'Média', tone: 'blue' }, alta: { label: 'Alta', tone: 'yellow' }, critica: { label: 'Crítica', tone: 'red' },
+}
+
+export const ACTIVITY_STATUS: Record<Enums<'activity_status'>, { label: string; tone: Tone }> = {
+  nao_iniciada: { label: 'Não iniciada', tone: 'grey' }, em_andamento: { label: 'Em andamento', tone: 'blue' },
+  bloqueada: { label: 'Bloqueada', tone: 'red' }, concluida: { label: 'Concluída', tone: 'green' }, cancelada: { label: 'Cancelada', tone: 'neutral' },
+}
+
+export const OCCURRENCE_STATUS: Record<Enums<'occurrence_status'>, { label: string; tone: Tone }> = {
+  aberta: { label: 'Aberta', tone: 'red' }, em_analise: { label: 'Em análise', tone: 'yellow' }, em_andamento: { label: 'Em andamento', tone: 'blue' },
+  aguardando_terceiros: { label: 'Aguardando terceiros', tone: 'yellow' }, resolvida: { label: 'Resolvida', tone: 'green' }, encerrada: { label: 'Encerrada', tone: 'grey' },
+}
+
+export const options = <T extends string>(map: Record<T, string | { label: string }>) =>
+  (Object.entries(map) as Array<[T, string | { label: string }]>).map(([value, v]) => ({ value, label: typeof v === 'string' ? v : v.label }))

@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Link, useNavigate } from '@/app/router'
+import { Link, useNavigate, useSearchParams } from '@/app/router'
 import { useAuth, useOrg } from '@/auth/AuthProvider'
 import { invalidate, useAction, useQuery } from '@/lib/useQuery'
 import { formatDate, formatDocument, formatPercent } from '@/lib/format'
@@ -10,14 +10,22 @@ import { Icon } from '@/ui/Icon'
 import { addProjectMember, getMyPermissions, getProject, listProjectMembers, removeProjectMember, setArchived, signedUrl, updateProjectMember, type Project, type ProjectMember } from './api'
 import { listOrgMembers } from '../users/api'
 import { AuditList } from '../audit/AuditPage'
+import { DiaryCalendar } from '../diary/DiaryCalendar'
+import { ActivitiesTab } from '../activities/ActivitiesTab'
+import { PhotoGallery } from '../photos/photos'
+import { ProjectDocuments } from '../documents/ProjectDocuments'
 
-type Tab = 'resumo' | 'equipe' | 'historico'
+type Tab = 'resumo' | 'diario' | 'atividades' | 'equipe' | 'fotos' | 'documentos' | 'historico'
+const TABS: Tab[] = ['resumo', 'diario', 'atividades', 'equipe', 'fotos', 'documentos', 'historico']
 
 export function ProjectDetailPage({ projectId }: { projectId: string }) {
   const { isAdmin } = useAuth()
   const navigate = useNavigate()
   const toast = useToast()
-  const [tab, setTab] = useState<Tab>('resumo')
+  const params = useSearchParams()
+  const initial = params.get('aba') as Tab | null
+  const [tab, setTabState] = useState<Tab>(initial && TABS.includes(initial) ? initial : 'resumo')
+  const setTab = (t: Tab) => { setTabState(t); window.history.replaceState(null, '', `/obras/${projectId}${t === 'resumo' ? '' : `?aba=${t}`}`) }
   const project = useQuery(`project:${projectId}`, () => getProject(projectId))
   const perms = useQuery(`perms:${projectId}`, () => getMyPermissions(projectId))
   const members = useQuery(`project_members:${projectId}`, () => listProjectMembers(projectId))
@@ -31,9 +39,14 @@ export function ProjectDetailPage({ projectId }: { projectId: string }) {
   const st = PROJECT_STATUS[p.status]
   const canEdit = !!perms.data?.['obra.editar']
 
+  const can = (k: string) => !!perms.data?.[k]
   const tabs: Array<{ id: Tab; label: string; count?: number }> = [
     { id: 'resumo', label: 'Resumo' },
+    { id: 'diario', label: 'Diário' },
+    { id: 'atividades', label: 'Atividades' },
     { id: 'equipe', label: 'Equipe', count: members.data?.length },
+    { id: 'fotos', label: 'Fotos' },
+    { id: 'documentos', label: 'Documentos' },
   ]
   if (isAdmin) tabs.push({ id: 'historico', label: 'Histórico' })
 
@@ -100,6 +113,22 @@ export function ProjectDetailPage({ projectId }: { projectId: string }) {
         </div>
       )}
 
+      {tab === 'diario' && (
+        <>
+          <div className="row between" style={{ marginBottom: 12 }}>
+            <div className="row">
+              <Link to={`/diarios?obra=${p.id}`} className="btn btn-secondary btn-md">Lista de diários</Link>
+              <Link to={`/ocorrencias?obra=${p.id}`} className="btn btn-secondary btn-md">Ocorrências</Link>
+              <Link to={`/relatorios?obra=${p.id}`} className="btn btn-secondary btn-md">Relatórios</Link>
+            </div>
+            {can('diario.criar') && !p.archived_at && <Button icon="mais" size="lg" onClick={() => navigate(`/diarios/novo?obra=${p.id}`)}>Diário de hoje</Button>}
+          </div>
+          <DiaryCalendar projectId={p.id} canCreate={can('diario.criar') && !p.archived_at} startDate={p.start_date} />
+        </>
+      )}
+      {tab === 'atividades' && <ActivitiesTab projectId={p.id} canManage={can('atividade.gerenciar')} archived={!!p.archived_at} />}
+      {tab === 'fotos' && <PhotoGallery projectId={p.id} canUpload={can('foto.enviar') && !p.archived_at} canEdit={can('obra.editar')} />}
+      {tab === 'documentos' && <ProjectDocuments projectId={p.id} canUpload={can('documento.enviar') && !p.archived_at} canManage={can('obra.editar')} />}
       {tab === 'equipe' && <TeamTab project={p} members={members.data ?? []} loading={members.loading} onChange={() => { void members.refetch() }} />}
       {tab === 'historico' && isAdmin && <Panel padded={false}><AuditList projectId={p.id} /></Panel>}
 

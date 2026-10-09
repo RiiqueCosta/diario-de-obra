@@ -5,7 +5,15 @@ type QueryState<T> = { data: T | undefined; error: AppError | null; loading: boo
 
 // Pequeno cache em memória para evitar "piscar" ao voltar a uma tela.
 const cache = new Map<string, unknown>()
+const stamps = new Map<string, number>()
 const listeners = new Map<string, Set<() => void>>()
+// URLs assinadas do Storage valem 1 hora: o cache delas expira antes.
+const TTL_SIGNED = 50 * 60 * 1000
+function fresh(key: string): boolean {
+  if (!cache.has(key)) return false
+  if (key.startsWith('signed:') && Date.now() - (stamps.get(key) ?? 0) > TTL_SIGNED) { cache.delete(key); return false }
+  return true
+}
 
 /** Invalida consultas cujo nome começa com o prefixo (ex.: 'projects'). */
 export function invalidate(prefix: string) {
@@ -18,9 +26,9 @@ export function invalidate(prefix: string) {
  * `null` desativa a consulta (ex.: aguardando um parâmetro).
  */
 export function useQuery<T>(key: string | null, fn: () => Promise<T>): QueryState<T> {
-  const [data, setData] = useState<T | undefined>(() => (key ? (cache.get(key) as T | undefined) : undefined))
+  const [data, setData] = useState<T | undefined>(() => (key && fresh(key) ? (cache.get(key) as T | undefined) : undefined))
   const [error, setError] = useState<AppError | null>(null)
-  const [loading, setLoading] = useState<boolean>(!!key && !cache.has(key))
+  const [loading, setLoading] = useState<boolean>(!!key && !fresh(key))
   const fnRef = useRef(fn)
   fnRef.current = fn
   const seq = useRef(0)
@@ -28,12 +36,13 @@ export function useQuery<T>(key: string | null, fn: () => Promise<T>): QueryStat
   const run = useCallback(async () => {
     if (!key) return
     const id = ++seq.current
-    setLoading(!cache.has(key))
+    setLoading(!fresh(key))
     setError(null)
     try {
       const result = await fnRef.current()
       if (id !== seq.current) return
       cache.set(key, result)
+      stamps.set(key, Date.now())
       setData(result)
     } catch (e) {
       if (id !== seq.current) return
@@ -45,7 +54,7 @@ export function useQuery<T>(key: string | null, fn: () => Promise<T>): QueryStat
 
   useEffect(() => {
     if (!key) { setData(undefined); setLoading(false); return }
-    setData(cache.get(key) as T | undefined)
+    setData(fresh(key) ? (cache.get(key) as T | undefined) : undefined)
     void run()
     const set = listeners.get(key) ?? new Set()
     const listener = () => { void run() }

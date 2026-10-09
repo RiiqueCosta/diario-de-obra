@@ -80,10 +80,11 @@ export function unwrap<T>(res: { data: T; error: unknown }): T {
 }
 
 /** Como unwrap, mas exige um registro (falha clara se vier vazio). */
-export function unwrapOne<T>(res: { data: T | null; error: unknown }): T {
-  const row = unwrap(res)
+export function unwrapOne<R extends { data: unknown; error: unknown }>(res: R): NonNullable<R['data']> {
+  if (res.error) throw toAppError(res.error)
+  const row = res.data
   if (row === null || row === undefined) throw new AppError('O servidor não devolveu o registro salvo. Recarregue para conferir.', 'desconhecido')
-  return row
+  return row as NonNullable<R['data']>
 }
 
 /** Exige que uma atualização com controle de versão tenha afetado uma linha. */

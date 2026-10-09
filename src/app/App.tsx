@@ -11,6 +11,16 @@ import { UsersPage } from '@/features/users/UsersPage'
 import { CompanySettingsPage } from '@/features/settings/CompanySettingsPage'
 import { AuditPage } from '@/features/audit/AuditPage'
 import { NotificationsPage } from '@/features/notifications/NotificationsPage'
+import { DiaryListPage } from '@/features/diary/DiaryListPage'
+import { NewDiaryPage } from '@/features/diary/NewDiaryPage'
+import { DiaryEditPage } from '@/features/diary/DiaryEditPage'
+import { DiaryViewPage } from '@/features/diary/DiaryViewPage'
+import { ApprovalsPage } from '@/features/diary/ApprovalsPage'
+import { TeamPage } from '@/features/team/TeamPage'
+import { MaterialsPage } from '@/features/team/MaterialsPage'
+import { OccurrenceDetailPage, OccurrencesListPage } from '@/features/occurrences/OccurrencesPages'
+import { ReportsPage } from '@/features/reports/ReportsPage'
+import { PhotosPage } from '@/features/photos/PhotosPage'
 import { Link, RouterProvider, Routes, useNavigate, useRouter, type RouteDef } from './router'
 
 const PUBLIC = ['/entrar', '/cadastro', '/recuperar-senha', '/redefinir-senha']
@@ -28,6 +38,17 @@ const routes: RouteDef[] = [
   { path: '/obras/:id', render: (p) => <ProjectDetailPage key={p.id} projectId={p.id} /> },
   { path: '/obras/:id/editar', render: (p) => <ProjectFormPage key={p.id} projectId={p.id} /> },
   { path: '/notificacoes', render: () => <NotificationsPage /> },
+  { path: '/diarios', render: () => <DiaryListPage /> },
+  { path: '/diarios/novo', render: () => <NewDiaryPage /> },
+  { path: '/diarios/:id', render: (p) => <DiaryViewPage key={p.id} reportId={p.id} /> },
+  { path: '/diarios/:id/editar', render: (p) => <DiaryEditPage key={p.id} reportId={p.id} /> },
+  { path: '/aprovacoes', render: () => <ApprovalsPage /> },
+  { path: '/ocorrencias', render: () => <OccurrencesListPage /> },
+  { path: '/ocorrencias/:id', render: (p) => <OccurrenceDetailPage key={p.id} id={p.id} /> },
+  { path: '/fotos', render: () => <PhotosPage /> },
+  { path: '/equipe', render: () => <TeamPage /> },
+  { path: '/materiais', render: () => <MaterialsPage /> },
+  { path: '/relatorios', render: () => <ReportsPage /> },
   { path: '/config/usuarios', render: () => <AdminOnly><UsersPage /></AdminOnly> },
   { path: '/config/empresa', render: () => <AdminOnly><CompanySettingsPage /></AdminOnly> },
   { path: '/config/auditoria', render: () => <AdminOnly><AuditPage /></AdminOnly> },

@@ -35,7 +35,16 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
   const main: NavItem[] = [
     { to: '/', label: 'Início', icon: 'home', match: (p) => p === '/' },
     { to: '/obras', label: 'Obras', icon: 'obra', match: (p) => p.startsWith('/obras') },
+    { to: '/diarios', label: 'Diários', icon: 'diario', match: (p) => p.startsWith('/diarios') },
+    { to: '/aprovacoes', label: 'Aprovações', icon: 'aprovar', match: (p) => p.startsWith('/aprovacoes') },
+    { to: '/ocorrencias', label: 'Ocorrências', icon: 'alerta', match: (p) => p.startsWith('/ocorrencias') },
+    { to: '/fotos', label: 'Fotos', icon: 'foto', match: (p) => p.startsWith('/fotos') },
+    { to: '/relatorios', label: 'Relatórios', icon: 'relatorio', match: (p) => p.startsWith('/relatorios') },
     { to: '/notificacoes', label: 'Notificações', icon: 'sino', match: (p) => p.startsWith('/notificacoes'), count: unread },
+  ]
+  const field: NavItem[] = [
+    { to: '/equipe', label: 'Equipe e mão de obra', icon: 'equipe', match: (p) => p.startsWith('/equipe') },
+    { to: '/materiais', label: 'Materiais e equipamentos', icon: 'config', match: (p) => p.startsWith('/materiais') },
   ]
   const admin: NavItem[] = [
     { to: '/config/usuarios', label: 'Usuários e permissões', icon: 'equipe', match: (p) => p.startsWith('/config/usuarios'), adminOnly: true },
@@ -75,6 +84,8 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
         </div>
         <nav className="nav">
           {main.map(navLink)}
+          <p className="nav-group">Cadastros de campo</p>
+          {field.map(navLink)}
           {isAdmin && <p className="nav-group">Administração</p>}
           {isAdmin && admin.map(navLink)}
         </nav>
@@ -91,16 +102,14 @@ export function AppShell({ children, title }: { children: ReactNode; title?: str
       <main className="main" id="conteudo">{children}</main>
 
       <nav className="bottom-nav" aria-label="Navegação rápida">
-        {[main[0], main[1], main[2]].map((item) => (
+        {[main[0], main[2]].map((item) => (
           <Link key={item.to} to={item.to} aria-current={item.match(path) ? 'page' : undefined}>
             <Icon name={item.icon} size={22} />{item.label}
-            {!!item.count && <span className="nav-count">{item.count > 9 ? '9+' : item.count}</span>}
           </Link>
         ))}
-        {isAdmin
-          ? <Link to="/config/usuarios" aria-current={path.startsWith('/config') ? 'page' : undefined}><Icon name="config" size={22} />Gestão</Link>
-          : <a href="#" onClick={(e) => { e.preventDefault(); setMenuOpen(true) }}><Icon name="usuario" size={22} />Conta</a>}
-        <a href="#" onClick={(e) => { e.preventDefault(); setMenuOpen(true) }}><Icon name="menu" size={22} />Mais</a>
+        <Link to="/diarios/novo" className="bottom-cta" aria-label="Novo diário de obra"><span className="bottom-cta-btn"><Icon name="mais" size={26} /></span>Novo diário</Link>
+        <Link to="/ocorrencias" aria-current={main[4].match(path) ? 'page' : undefined}><Icon name="alerta" size={22} />Ocorrências</Link>
+        <a href="#" onClick={(e) => { e.preventDefault(); setMenuOpen(true) }}><Icon name="menu" size={22} />Mais{unread > 0 && <span className="nav-count">{unread > 9 ? '9+' : unread}</span>}</a>
       </nav>
     </div>
   )
